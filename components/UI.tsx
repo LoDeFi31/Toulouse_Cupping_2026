@@ -1,25 +1,31 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 
 // Helper to determine text color based on background brightness
 const getContrastYIQ = (hexcolor: string) => {
   if (!hexcolor) return 'black';
   const hex = hexcolor.replace("#", "");
-  // Handle shorthand hex like #ccc
   const r = parseInt(hex.length === 3 ? hex[0] + hex[0] : hex.substr(0,2),16);
   const g = parseInt(hex.length === 3 ? hex[1] + hex[1] : hex.substr(2,2),16);
   const b = parseInt(hex.length === 3 ? hex[2] + hex[2] : hex.substr(4,2),16);
   const yiq = ((r*299)+(g*587)+(b*114))/1000;
-  return (yiq >= 128) ? '#1f2937' : 'white'; // Gray-800 or White
+  return (yiq >= 128) ? '#1E1B18' : '#FFFFFF';
 };
 
-// Card
-export const Card: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
-  <div className={`bg-white dark:bg-card-dark dark:border-white/10 rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300 ease-standard p-4 mb-4 border border-surface-variant ${className}`}>
+// M3 Elevated Card
+export const Card: React.FC<{ children: React.ReactNode; className?: string; style?: React.CSSProperties }> = ({ children, className = '', style }) => (
+  <div 
+    style={style}
+    className={`
+    bg-surface-container-low dark:bg-surface-container-high-dark 
+    rounded-2xl shadow-elevation-1 hover:shadow-elevation-2 
+    transition-all duration-500 ease-emphasized
+    p-4 mb-4 ${className}
+  `}>
     {children}
   </div>
 );
 
-// Slider
+// M3 Discrete Slider (Native Implementation for robustness)
 interface SliderProps {
   label: string;
   value: number;
@@ -31,28 +37,71 @@ interface SliderProps {
 }
 
 export const Slider: React.FC<SliderProps> = ({ label, value, onChange, min = 6, max = 10, step = 0.25, disabled }) => {
+  const percentage = ((value - min) / (max - min)) * 100;
+  
+  // Calculate tick marks
+  const ticks = useMemo(() => {
+    const count = (max - min) / step;
+    if (count > 50) return []; 
+    return Array.from({ length: count + 1 }).map((_, i) => (i / count) * 100);
+  }, [min, max, step]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVal = parseFloat(e.target.value);
+    onChange(newVal);
+    // Haptics on change
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+       try { navigator.vibrate(5); } catch(e){}
+    }
+  };
+
   return (
-    <div className="mb-4">
-      <div className="flex justify-between items-center mb-2">
-        <span className="text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors duration-200">{label}</span>
-        <span className={`text-lg font-bold text-primary tabular-nums transition-all duration-200 ${disabled ? 'opacity-50' : ''}`}>
+    <div className="mb-6 select-none group">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-2 transition-all duration-300 ease-standard">
+        <label className="text-label-large text-on-surface dark:text-on-surface-dark group-focus-within:text-primary dark:group-focus-within:text-primary-dark transition-colors">{label}</label>
+        <span className={`text-title-medium text-primary dark:text-primary-dark tabular-nums ${disabled ? 'opacity-50' : ''}`}>
           {value.toFixed(2)}
         </span>
       </div>
-      <div className="relative h-6 flex items-center">
+      
+      {/* Slider Container */}
+      <div className="relative h-10 w-full flex items-center touch-none">
+        
+        {/* Ticks Background Layer */}
+        <div className="absolute w-full h-[4px] rounded-full overflow-hidden pointer-events-none z-0">
+           {ticks.map((tickPct, idx) => {
+             // Skip first and last for clean edges
+             if (idx === 0 || idx === ticks.length - 1) return null;
+             return (
+               <div 
+                  key={idx}
+                  className="absolute top-1/2 -translate-y-1/2 w-[2px] h-[2px] rounded-full bg-on-surface-variant dark:bg-on-surface-variant-dark opacity-40"
+                  style={{ left: `${tickPct}%` }}
+               />
+             );
+           })}
+        </div>
+
+        {/* Native Input with Dynamic Background Gradient for Track Fill */}
         <input
           type="range"
           min={min}
           max={max}
           step={step}
           value={value}
-          onChange={(e) => onChange(parseFloat(e.target.value))}
+          onChange={handleChange}
           disabled={disabled}
-          className="w-full h-2 bg-transparent appearance-none cursor-pointer focus:outline-none z-10"
+          className="m3-slider z-10"
+          style={{
+            // Use gradient to simulate the "Active" track color
+            background: `linear-gradient(to right, var(--slider-thumb) 0%, var(--slider-thumb) ${percentage}%, var(--slider-track) ${percentage}%, var(--slider-track) 100%)`
+          }}
         />
-        {/* Custom Track Background for better dark mode support if needed, currently handled in global CSS */}
       </div>
-      <div className="flex justify-between text-xs text-gray-400 px-1 mt-1 font-medium">
+      
+      {/* Range Labels */}
+      <div className="flex justify-between text-xs font-medium text-on-surface-variant dark:text-on-surface-variant-dark opacity-70 -mt-2 px-1">
         <span>{min}</span>
         <span>{max}</span>
       </div>
@@ -62,15 +111,15 @@ export const Slider: React.FC<SliderProps> = ({ label, value, onChange, min = 6,
 
 // Section Header
 export const SectionTitle: React.FC<{ children: React.ReactNode; icon?: React.ReactNode }> = ({ children, icon }) => (
-  <h3 className="text-lg font-semibold text-primary mb-4 flex items-center gap-3">
-    <span className="transition-transform duration-300 hover:scale-110 hover:rotate-6">
+  <h3 className="text-title-medium text-on-surface dark:text-on-surface-dark mb-4 flex items-center gap-3">
+    <span className="text-primary dark:text-primary-dark transition-all duration-500 ease-emphasized group-hover:scale-110 group-hover:rotate-6">
       {icon}
     </span>
     {children}
   </h3>
 );
 
-// Chip
+// M3 Filter Chip
 export const Chip: React.FC<{ 
   label: string; 
   selected?: boolean; 
@@ -79,26 +128,34 @@ export const Chip: React.FC<{
   color?: string;
   disabled?: boolean;
 }> = ({ label, selected, onClick, onDelete, color, disabled }) => {
-  const bg = selected ? (color || '#8D6E4D') : 'transparent';
-  const textColor = selected ? getContrastYIQ(bg) : 'inherit';
-  
-  // Dynamic styles for smooth color transition
-  const style = selected ? { backgroundColor: bg, color: textColor, borderColor: bg } : { borderColor: 'transparent' };
+  const customBg = selected ? (color || '#865328') : 'transparent';
+  const customText = selected ? getContrastYIQ(customBg) : 'inherit';
   
   return (
     <div 
       className={`
-        inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium m-1 
+        inline-flex items-center px-4 py-1.5 rounded-lg text-label-large m-1 
         border transition-all duration-300 ease-emphasized select-none
-        ${selected ? 'shadow-sm transform scale-100' : 'bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/10'}
-        ${!disabled && onClick ? 'cursor-pointer active:scale-95' : 'opacity-80 cursor-default'}
+        ${selected 
+          ? 'shadow-sm transform scale-100 border-transparent' 
+          : 'bg-surface-container-high dark:bg-surface-container-high-dark border-outline-variant dark:border-outline-variant/30 text-on-surface-variant dark:text-on-surface-variant-dark hover:bg-surface-variant dark:hover:bg-white/10'
+        }
+        ${!disabled && onClick ? 'cursor-pointer active:scale-90 hover:scale-[1.02]' : 'opacity-60 cursor-default'}
       `}
-      style={style}
+      style={selected ? { backgroundColor: customBg, color: customText } : {}}
       onClick={!disabled ? onClick : undefined}
     >
+      {selected && (
+        <svg className="w-4 h-4 mr-1.5 -ml-1 animate-fadeIn" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      )}
       {label}
       {onDelete && !disabled && (
-        <span className="ml-2 w-4 h-4 flex items-center justify-center rounded-full bg-black/10 hover:bg-black/20 transition-colors">
+        <span 
+          className="ml-2 -mr-1 w-5 h-5 flex items-center justify-center rounded-full hover:bg-black/10 transition-colors"
+          onClick={(e) => { e.stopPropagation(); onDelete(); }}
+        >
           ×
         </span>
       )}
@@ -106,18 +163,20 @@ export const Chip: React.FC<{
   );
 };
 
-// Button
-export const Button: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'primary' | 'secondary' | 'outline' }> = ({ 
+// M3 Buttons (Stadium Shape)
+export const Button: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'filled' | 'tonal' | 'outlined' | 'text' }> = ({ 
   children, 
-  variant = 'primary', 
+  variant = 'filled', 
   className = '', 
   ...props 
 }) => {
-  const baseStyle = "px-5 py-2.5 rounded-xl font-medium transition-all duration-200 ease-standard shadow-sm active:shadow-inner disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-[0.98]";
+  const baseStyle = "h-10 px-6 rounded-full text-label-large transition-all duration-300 ease-emphasized flex items-center justify-center gap-2 active:scale-95 disabled:opacity-38 disabled:cursor-not-allowed";
+  
   const variants = {
-    primary: "bg-primary text-on-primary hover:bg-[#755839] hover:shadow-md",
-    secondary: "bg-secondary text-white hover:bg-[#5E462E] hover:shadow-md",
-    outline: "border border-primary text-primary hover:bg-surface-variant dark:hover:bg-white/5 bg-transparent"
+    filled: "bg-primary dark:bg-primary-dark text-on-primary dark:text-on-primary-dark hover:brightness-105 hover:shadow-elevation-2 active:shadow-none",
+    tonal: "bg-secondary-container text-on-secondary-container dark:bg-secondary-container-dark dark:text-on-secondary-container-dark hover:bg-secondary-container/80 dark:hover:bg-secondary-container-dark/80 hover:shadow-elevation-1 active:shadow-none",
+    outlined: "border border-outline dark:border-outline-variant text-primary dark:text-primary-dark hover:bg-primary/5 dark:hover:bg-primary-dark/5 active:bg-primary/10",
+    text: "text-primary dark:text-primary-dark hover:bg-primary/5 dark:hover:bg-primary-dark/5 active:bg-primary/10"
   };
 
   return (
@@ -132,10 +191,10 @@ export const GoogleSignInButton: React.FC<{ onClick: () => void; isLoading?: boo
   <button 
     onClick={onClick}
     disabled={isLoading}
-    className="bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 px-4 py-2 rounded-lg shadow-sm font-medium text-sm flex items-center gap-2 transition-all duration-200 ease-standard active:scale-95 hover:shadow-md"
+    className="bg-surface-container-high dark:bg-surface-container-high-dark text-on-surface dark:text-on-surface-dark border border-outline-variant dark:border-outline-variant px-5 py-2.5 rounded-full font-medium text-sm flex items-center gap-2 transition-all duration-300 ease-emphasized hover:shadow-elevation-1 active:scale-95"
   >
     {isLoading ? (
-      <span className="animate-spin h-5 w-5 border-2 border-gray-500 rounded-full border-t-transparent"></span>
+      <span className="animate-spin h-5 w-5 border-2 border-primary rounded-full border-t-transparent"></span>
     ) : (
       <svg className="w-5 h-5" viewBox="0 0 24 24">
         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>

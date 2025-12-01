@@ -33,10 +33,10 @@ const AromaSelector: React.FC<AromaSelectorProps> = ({ selectedNotes, onChange, 
       {/* Selected Tags Display */}
       <div className={`
         flex flex-wrap gap-2 min-h-[44px] p-3 rounded-xl border border-dashed transition-all duration-300
-        ${selectedNotes.length > 0 ? 'bg-white dark:bg-black/20 border-primary/30' : 'bg-gray-50 dark:bg-white/5 border-gray-300 dark:border-white/10'}
+        ${selectedNotes.length > 0 ? 'bg-white dark:bg-surface-container-high-dark border-primary/30' : 'bg-gray-50 dark:bg-white/5 border-outline-variant dark:border-outline-variant/30'}
       `}>
         {selectedNotes.length === 0 && (
-          <span className="text-gray-400 text-sm italic py-1">Aucun arôme sélectionné</span>
+          <span className="text-on-surface-variant dark:text-on-surface-variant-dark text-body-small italic py-1">Aucun arôme sélectionné</span>
         )}
         {selectedNotes.map(note => (
           <Chip 
@@ -62,7 +62,7 @@ const AromaSelector: React.FC<AromaSelectorProps> = ({ selectedNotes, onChange, 
                 key={category.id} 
                 className={`
                   border rounded-xl overflow-hidden transition-all duration-300 ease-standard
-                  ${isExpanded ? 'border-primary shadow-sm bg-white dark:bg-card-dark' : 'border-gray-200 dark:border-white/10 bg-white dark:bg-card-dark'}
+                  ${isExpanded ? 'border-primary shadow-sm bg-white dark:bg-surface-container-high-dark' : 'border-outline-variant/50 dark:border-white/10 bg-white dark:bg-card-dark'}
                 `}
               >
                 <button
@@ -71,7 +71,7 @@ const AromaSelector: React.FC<AromaSelectorProps> = ({ selectedNotes, onChange, 
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: category.color }}></div>
-                    <span className="font-medium text-gray-700 dark:text-gray-200">{category.name}</span>
+                    <span className="font-medium text-on-surface dark:text-on-surface-dark">{category.name}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     {activeCount > 0 && (
@@ -79,7 +79,7 @@ const AromaSelector: React.FC<AromaSelectorProps> = ({ selectedNotes, onChange, 
                         {activeCount}
                       </span>
                     )}
-                    <span className={`text-gray-400 transform transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>▼</span>
+                    <span className={`text-on-surface-variant dark:text-on-surface-variant-dark transform transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>▼</span>
                   </div>
                 </button>
                 
@@ -88,7 +88,7 @@ const AromaSelector: React.FC<AromaSelectorProps> = ({ selectedNotes, onChange, 
                   className={`grid transition-all duration-300 ease-emphasized ${isExpanded ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
                 >
                   <div className="overflow-hidden">
-                    <div className="p-3 bg-gray-50 dark:bg-black/20 border-t border-gray-100 dark:border-white/5 flex flex-wrap gap-2">
+                    <div className="p-3 bg-surface-container dark:bg-surface-container-dark border-t border-outline/10 dark:border-white/5 flex flex-wrap gap-2">
                       {category.items.map(item => (
                         <Chip
                           key={item}

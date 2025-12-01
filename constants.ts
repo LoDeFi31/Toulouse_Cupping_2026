@@ -86,6 +86,7 @@ export const DEFAULT_COFFEE: CoffeeEntry = {
   id: '',
   name: 'Nouveau Café',
   isLocked: false,
+  isFavorite: false,
   timestamp: Date.now(),
   fragranceScore: 7.5,
   fragranceNotes: [],

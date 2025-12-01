@@ -1,4 +1,4 @@
-const CACHE_NAME = 'toulouse-cupping-v3';
+const CACHE_NAME = 'toulouse-cupping-v4';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -33,22 +33,23 @@ self.addEventListener('activate', (event) => {
 
 // Fetch Event: Stratégie hybride pour SPA
 self.addEventListener('fetch', (event) => {
-  // Ignorer les requêtes non-GET (POST, etc.)
   if (event.request.method !== 'GET') return;
 
-  // 1. Navigation (HTML) -> Network First, puis Cache (pour avoir la dernière version si dispo, sinon offline)
+  const url = new URL(event.request.url);
+
+  // 1. Navigation (HTML) -> Network First, puis Cache
+  // Gérer spécifiquement le cas du start_url avec query params (/?source=pwa)
   if (event.request.mode === 'navigate') {
     event.respondWith(
       (async () => {
         try {
+          // Essayer le réseau d'abord
           const networkResponse = await fetch(event.request);
-          // Mise à jour du cache en arrière-plan pour la prochaine fois
-          const cache = await caches.open(CACHE_NAME);
-          cache.put(event.request, networkResponse.clone());
           return networkResponse;
         } catch (error) {
-          console.log('[Service Worker] Network failed, using cache for navigation', error);
+          // Fallback sur le cache
           const cache = await caches.open(CACHE_NAME);
+          // Essayer de trouver l'URL exacte, sinon retourner index.html (SPA routing)
           const cachedResponse = await cache.match(event.request) || await cache.match('/index.html');
           return cachedResponse;
         }
@@ -57,24 +58,20 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 2. Assets Statiques (JS, Images, Fonts) -> Cache First, puis Network (pour la rapidité)
+  // 2. Assets Statiques -> Cache First
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
         return cachedResponse;
       }
       return fetch(event.request).then((networkResponse) => {
-        // Sauvegarde dynamique des nouveaux fichiers (ex: chunks JS générés par Vite)
         if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic' && networkResponse.type !== 'cors') {
           return networkResponse;
         }
-        
-        // Cloner la réponse car elle ne peut être utilisée qu'une fois
         const responseToCache = networkResponse.clone();
         caches.open(CACHE_NAME).then((cache) => {
           cache.put(event.request, responseToCache);
         });
-
         return networkResponse;
       });
     })

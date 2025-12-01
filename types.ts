@@ -11,6 +11,7 @@ export interface CoffeeEntry {
   id: string;
   name: string;
   isLocked: boolean;
+  isFavorite: boolean; // New: Mark as favorite
   timestamp: number;
   
   // A. Roast - REMOVED
