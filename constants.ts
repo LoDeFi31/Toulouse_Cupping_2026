@@ -77,7 +77,7 @@ export const ROAST_LEVELS: { id: RoastLevelType; label: string; color: string }[
   { id: 'dark', label: 'Dark', color: '#4A3428' },
 ];
 
-export const ACIDITY_TYPES = ['Citrique', 'Malique', 'Tartrique', 'Phosphorique', 'Acétique'];
+export const ACIDITY_TYPES = ['Citrique', 'Malique', 'Tartrique', 'Acétique'];
 export const ACIDITY_INTENSITIES = ['Faible', 'Moyenne', 'Forte'];
 
 export const BODY_TYPES = ['Aqueux', 'Léger', 'Moyen', 'Rond', 'Crémeux', 'Sirupeux', 'Velouté', 'Charnu'];
@@ -87,7 +87,6 @@ export const DEFAULT_COFFEE: CoffeeEntry = {
   name: 'Nouveau Café',
   isLocked: false,
   timestamp: Date.now(),
-  roastLevel: 'medium',
   fragranceScore: 7.5,
   fragranceNotes: [],
   flavorScore: 7.5,

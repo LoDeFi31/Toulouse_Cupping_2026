@@ -5,6 +5,18 @@ import CoffeeForm from './components/CoffeeForm';
 import SummaryTable from './components/SummaryTable';
 import { Button, GoogleSignInButton } from './components/UI';
 import { AppLogo } from './components/Icons';
+import { IOSInstallPrompt } from './components/IOSInstallPrompt';
+
+// Version de l'application (à changer manuellement quand vous faites une grosse mise à jour pour le suivi)
+const APP_VERSION = "1.0.2";
+
+// Helper for ID generation that works in all contexts (including non-secure HTTP previews)
+const generateId = () => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+};
 
 // Mock User Interface
 interface User {
@@ -25,10 +37,10 @@ const App: React.FC = () => {
       }
     }
     return {
-      id: crypto.randomUUID(),
+      id: generateId(),
       createdAt: Date.now(),
       name: 'Nouvelle Session',
-      coffees: [{ ...DEFAULT_COFFEE, id: crypto.randomUUID() }]
+      coffees: [{ ...DEFAULT_COFFEE, id: generateId() }]
     };
   });
 
@@ -36,25 +48,50 @@ const App: React.FC = () => {
   const [showSummary, setShowSummary] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   
-  // Auth State
-  const [user, setUser] = useState<User | null>(null);
+  // Auth State (Persistent)
+  const [user, setUser] = useState<User | null>(() => {
+    const savedUser = localStorage.getItem('toulouse_cupping_user');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  // Persistence
+  // Handle Android Shortcut Actions
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('action') === 'new_session') {
+      if (window.confirm("Raccourci détecté : Démarrer une nouvelle session ?")) {
+         const newSession = {
+            id: generateId(),
+            createdAt: Date.now(),
+            name: 'Nouvelle Session',
+            coffees: [{ ...DEFAULT_COFFEE, id: generateId() }]
+          };
+          setSession(newSession);
+          setActiveCoffeeIndex(0);
+          setShowSummary(false);
+          // Clean URL
+          window.history.replaceState({}, '', '/');
+      }
+    }
+  }, []);
+
+  // Persistence for Session
   useEffect(() => {
     localStorage.setItem('toulouse_cupping_session', JSON.stringify(session));
   }, [session]);
 
-  // Auth Handlers (Simulation)
+  // Auth Handlers (Simulation with Persistence)
   const handleGoogleLogin = () => {
     setIsLoggingIn(true);
     // Simulate API delay
     setTimeout(() => {
-      setUser({
+      const newUser = {
         name: "Cupping Expert",
         email: "expert@toulouse-cupping.fr",
         photoURL: "https://ui-avatars.com/api/?name=Cupping+Expert&background=8D6E4D&color=fff"
-      });
+      };
+      setUser(newUser);
+      localStorage.setItem('toulouse_cupping_user', JSON.stringify(newUser));
       setIsLoggingIn(false);
       setShowMenu(false);
     }, 1500);
@@ -62,6 +99,7 @@ const App: React.FC = () => {
 
   const handleLogout = () => {
     setUser(null);
+    localStorage.removeItem('toulouse_cupping_user');
     setShowMenu(false);
   };
 
@@ -74,16 +112,33 @@ const App: React.FC = () => {
     const btn = document.getElementById('cloud-save-btn');
     if(btn) btn.innerText = "Sauvegarde...";
     setTimeout(() => {
-      alert(`Session sauvegardée dans le cloud pour ${user.email} !`);
+      alert(`Session synchronisée dans le cloud pour ${user.email} !`);
       if(btn) btn.innerText = "☁️ Sauvegarder (Cloud)";
     }, 1000);
+  };
+
+  // Force Update Logic
+  const handleForceUpdate = () => {
+    if (confirm("Voulez-vous recharger l'application pour obtenir la dernière version ?")) {
+        // Unregister service workers to force cache clear
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for(let registration of registrations) {
+                    registration.unregister();
+                }
+                window.location.reload();
+            });
+        } else {
+            window.location.reload();
+        }
+    }
   };
 
   // Session Handlers
   const addCoffee = () => {
     const newCoffee = { 
       ...DEFAULT_COFFEE, 
-      id: crypto.randomUUID(), 
+      id: generateId(), 
       name: `Café ${session.coffees.length + 1}` 
     };
     setSession(prev => ({
@@ -112,10 +167,10 @@ const App: React.FC = () => {
   const resetSession = () => {
     if (window.confirm("Voulez-vous vraiment commencer une nouvelle session ? Les données actuelles seront perdues si non exportées.")) {
       setSession({
-        id: crypto.randomUUID(),
+        id: generateId(),
         createdAt: Date.now(),
         name: 'Nouvelle Session',
-        coffees: [{ ...DEFAULT_COFFEE, id: crypto.randomUUID() }]
+        coffees: [{ ...DEFAULT_COFFEE, id: generateId() }]
       });
       setActiveCoffeeIndex(0);
       setShowSummary(false);
@@ -160,9 +215,10 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-surface font-sans text-gray-800">
+      <IOSInstallPrompt />
       
-      {/* Top App Bar */}
-      <header className="sticky top-0 z-40 bg-primary text-on-primary shadow-md px-4 py-3 flex justify-between items-center">
+      {/* Top App Bar with Safe Area Padding */}
+      <header className="sticky top-0 z-40 bg-primary text-on-primary shadow-md px-4 py-3 flex justify-between items-center select-none pt-safe transition-all">
         <div className="flex items-center gap-3">
           <AppLogo className="w-9 h-9" />
           <h1 className="hidden md:block text-xl font-bold tracking-tight">Toulouse Cupping App</h1>
@@ -234,6 +290,15 @@ const App: React.FC = () => {
 
              <div className="h-px bg-gray-200 my-1"></div>
 
+             <div className="px-4 py-2 bg-gray-50">
+               <p className="text-xs font-semibold text-gray-400 uppercase mb-2">App v{APP_VERSION}</p>
+                <button onClick={handleForceUpdate} className="w-full text-left flex items-center gap-2 py-2 text-blue-600 hover:text-blue-800 transition-colors">
+                   🔄 Vérifier mise à jour
+                </button>
+             </div>
+
+             <div className="h-px bg-gray-200 my-1"></div>
+
              <div className="px-4 py-2">
                 {user && (
                    <button onClick={handleLogout} className="w-full text-left flex items-center gap-2 py-2 text-gray-600 hover:text-gray-800 transition-colors">
@@ -248,8 +313,8 @@ const App: React.FC = () => {
         )}
       </header>
 
-      {/* Coffee Tabs Carousel */}
-      <div className="bg-surface-variant sticky top-[56px] z-30 shadow-sm border-b border-outline/20">
+      {/* Coffee Tabs Carousel - offset for sticky header */}
+      <div className="bg-surface-variant sticky top-[env(safe-area-inset-top,_0px)] mt-[0px] z-30 shadow-sm border-b border-outline/20 pt-0">
         <div className="flex overflow-x-auto no-scrollbar px-2 py-2 gap-2">
           {session.coffees.map((coffee, idx) => (
             <button

@@ -13,10 +13,9 @@ const SummaryTable: React.FC<SummaryTableProps> = ({ coffees, onBack }) => {
     (c.fragranceScore + c.flavorScore + c.aftertasteScore + c.acidityScore + c.bodyScore + c.balanceScore) / 6;
 
   const exportCSV = () => {
-    const headers = ['Café', 'Torréfaction', 'Fragrance', 'Saveur', 'Arrière-goût', 'Acidité', 'Corps', 'Équilibre', 'Score Final', 'Commentaires'];
+    const headers = ['Café', 'Fragrance', 'Saveur', 'Arrière-goût', 'Acidité', 'Corps', 'Équilibre', 'Score Final', 'Commentaires'];
     const rows = coffees.map(c => [
         `"${c.name}"`,
-        c.roastLevel,
         c.fragranceScore,
         c.flavorScore,
         c.aftertasteScore,

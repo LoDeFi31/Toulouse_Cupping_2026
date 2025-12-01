@@ -21,24 +21,23 @@ const AromaSelector: React.FC<AromaSelectorProps> = ({ selectedNotes, onChange, 
   };
 
   const getNoteColor = (note: string) => {
-    // First check if there is a specific override
     if (ITEM_COLOR_OVERRIDES[note]) {
       return ITEM_COLOR_OVERRIDES[note];
     }
-    // Fallback to category color
     const cat = AROMA_CATEGORIES.find(c => c.items.includes(note));
     return cat ? cat.color : undefined;
   };
 
-  const getCategoryColor = (catId: string) => {
-    return AROMA_CATEGORIES.find(c => c.id === catId)?.color;
-  };
-
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {/* Selected Tags Display */}
-      <div className="flex flex-wrap gap-1 min-h-[40px] p-2 bg-gray-50 rounded-lg border border-gray-100 mb-2">
-        {selectedNotes.length === 0 && <span className="text-gray-400 text-sm italic py-1 px-2">Aucun arôme sélectionné</span>}
+      <div className={`
+        flex flex-wrap gap-2 min-h-[44px] p-3 rounded-xl border border-dashed transition-all duration-300
+        ${selectedNotes.length > 0 ? 'bg-white dark:bg-black/20 border-primary/30' : 'bg-gray-50 dark:bg-white/5 border-gray-300 dark:border-white/10'}
+      `}>
+        {selectedNotes.length === 0 && (
+          <span className="text-gray-400 text-sm italic py-1">Aucun arôme sélectionné</span>
+        )}
         {selectedNotes.map(note => (
           <Chip 
             key={note} 
@@ -53,42 +52,55 @@ const AromaSelector: React.FC<AromaSelectorProps> = ({ selectedNotes, onChange, 
 
       {/* Categories Accordion */}
       {!disabled && (
-        <div className="space-y-1">
+        <div className="space-y-2">
           {AROMA_CATEGORIES.map(category => {
             const isExpanded = expandedCategory === category.id;
             const activeCount = category.items.filter(item => selectedNotes.includes(item)).length;
 
             return (
-              <div key={category.id} className="border border-gray-200 rounded-lg overflow-hidden">
+              <div 
+                key={category.id} 
+                className={`
+                  border rounded-xl overflow-hidden transition-all duration-300 ease-standard
+                  ${isExpanded ? 'border-primary shadow-sm bg-white dark:bg-card-dark' : 'border-gray-200 dark:border-white/10 bg-white dark:bg-card-dark'}
+                `}
+              >
                 <button
                   onClick={() => setExpandedCategory(isExpanded ? null : category.id)}
-                  className="w-full flex justify-between items-center p-3 text-left bg-white hover:bg-gray-50 transition-colors"
+                  className="w-full flex justify-between items-center p-3 text-left hover:bg-gray-50 dark:hover:bg-white/5 transition-colors duration-200"
                 >
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: category.color }}></div>
-                    <span className="font-medium text-gray-700">{category.name}</span>
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: category.color }}></div>
+                    <span className="font-medium text-gray-700 dark:text-gray-200">{category.name}</span>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
                     {activeCount > 0 && (
-                      <span className="bg-primary text-white text-xs px-2 py-0.5 rounded-full">{activeCount}</span>
+                      <span className="bg-primary text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-sm transform transition-transform duration-300 animate-pop">
+                        {activeCount}
+                      </span>
                     )}
-                    <span className={`text-gray-400 transform transition-transform ${isExpanded ? 'rotate-180' : ''}`}>▼</span>
+                    <span className={`text-gray-400 transform transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>▼</span>
                   </div>
                 </button>
                 
-                {isExpanded && (
-                  <div className="p-3 bg-gray-50 border-t border-gray-100 flex flex-wrap gap-2 animate-fadeIn">
-                    {category.items.map(item => (
-                      <Chip
-                        key={item}
-                        label={item}
-                        selected={selectedNotes.includes(item)}
-                        color={getNoteColor(item)}
-                        onClick={() => toggleNote(item)}
-                      />
-                    ))}
+                {/* CSS Grid Transition for Smooth Height Animation */}
+                <div 
+                  className={`grid transition-all duration-300 ease-emphasized ${isExpanded ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
+                >
+                  <div className="overflow-hidden">
+                    <div className="p-3 bg-gray-50 dark:bg-black/20 border-t border-gray-100 dark:border-white/5 flex flex-wrap gap-2">
+                      {category.items.map(item => (
+                        <Chip
+                          key={item}
+                          label={item}
+                          selected={selectedNotes.includes(item)}
+                          color={getNoteColor(item)}
+                          onClick={() => toggleNote(item)}
+                        />
+                      ))}
+                    </div>
                   </div>
-                )}
+                </div>
               </div>
             );
           })}

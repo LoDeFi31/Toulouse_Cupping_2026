@@ -1,0 +1,67 @@
+{
+  "name": "Toulouse Cupping App",
+  "short_name": "Toulouse Cup",
+  "start_url": "/?source=pwa",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "minimal-ui"],
+  "background_color": "#FFF8F4",
+  "theme_color": "#8D6E4D",
+  "orientation": "portrait",
+  "description": "Application professionnelle de dégustation de café (Cupping) suivant les standards SCA.",
+  "categories": ["food", "productivity", "utilities"],
+  "lang": "fr",
+  "dir": "ltr",
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='%23FFF8F4' stroke='%238D6E4D' stroke-width='2'/%3E%3Cmask id='m'%3E%3Ccircle cx='50' cy='50' r='44' fill='%23fff'/%3E%3C/mask%3E%3Cg mask='url(%23m)'%3E%3Crect width='100' height='50' fill='%238D6E4D'/%3E%3Crect y='50' width='100' height='50' fill='%23374151'/%3E%3Cpath d='M25 55h50M30 55s0 23 20 23 20-23 20-23M70 60c6 0 8 2 8 6s-2 6-8 6' stroke='%23FFF8F4' stroke-width='3' stroke-linecap='round' fill='none'/%3E%3Cline x1='50' y1='15' x2='50' y2='42' stroke='%23FFF8F4' stroke-width='4' stroke-linecap='round'/%3E%3Cellipse cx='50' cy='42' rx='9' ry='11' fill='%23FFF8F4'/%3E%3C/g%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='%23FFF8F4' stroke='%238D6E4D' stroke-width='2'/%3E%3Cmask id='m'%3E%3Ccircle cx='50' cy='50' r='44' fill='%23fff'/%3E%3C/mask%3E%3Cg mask='url(%23m)'%3E%3Crect width='100' height='50' fill='%238D6E4D'/%3E%3Crect y='50' width='100' height='50' fill='%23374151'/%3E%3Cpath d='M25 55h50M30 55s0 23 20 23 20-23 20-23M70 60c6 0 8 2 8 6s-2 6-8 6' stroke='%23FFF8F4' stroke-width='3' stroke-linecap='round' fill='none'/%3E%3Cline x1='50' y1='15' x2='50' y2='42' stroke='%23FFF8F4' stroke-width='4' stroke-linecap='round'/%3E%3Cellipse cx='50' cy='42' rx='9' ry='11' fill='%23FFF8F4'/%3E%3C/g%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='%23FFF8F4' stroke='%238D6E4D' stroke-width='2'/%3E%3Cmask id='m'%3E%3Ccircle cx='50' cy='50' r='44' fill='%23fff'/%3E%3C/mask%3E%3Cg mask='url(%23m)'%3E%3Crect width='100' height='50' fill='%238D6E4D'/%3E%3Crect y='50' width='100' height='50' fill='%23374151'/%3E%3Cpath d='M25 55h50M30 55s0 23 20 23 20-23 20-23M70 60c6 0 8 2 8 6s-2 6-8 6' stroke='%23FFF8F4' stroke-width='3' stroke-linecap='round' fill='none'/%3E%3Cline x1='50' y1='15' x2='50' y2='42' stroke='%23FFF8F4' stroke-width='4' stroke-linecap='round'/%3E%3Cellipse cx='50' cy='42' rx='9' ry='11' fill='%23FFF8F4'/%3E%3C/g%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "https://placehold.co/360x640/8D6E4D/FFF8F4/png?text=Cupping+Form&font=roboto",
+      "sizes": "360x640",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Formulaire de dégustation Mobile"
+    },
+    {
+      "src": "https://placehold.co/360x640/FFF8F4/8D6E4D/png?text=Summary+Table&font=roboto",
+      "sizes": "360x640",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Tableau récapitulatif"
+    },
+    {
+      "src": "https://placehold.co/1280x800/8D6E4D/FFF8F4/png?text=Desktop+Dashboard&font=roboto",
+      "sizes": "1280x800",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Vue Bureau et Tablette"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Nouvelle Session",
+      "short_name": "Nouv. Session",
+      "description": "Démarrer une nouvelle feuille de dégustation",
+      "url": "/?action=new_session",
+      "icons": [{ "src": "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='%23FFF8F4' stroke='%238D6E4D' stroke-width='2'/%3E%3Cmask id='m'%3E%3Ccircle cx='50' cy='50' r='44' fill='%23fff'/%3E%3C/mask%3E%3Cg mask='url(%23m)'%3E%3Crect width='100' height='50' fill='%238D6E4D'/%3E%3Crect y='50' width='100' height='50' fill='%23374151'/%3E%3Cpath d='M25 55h50M30 55s0 23 20 23 20-23 20-23M70 60c6 0 8 2 8 6s-2 6-8 6' stroke='%23FFF8F4' stroke-width='3' stroke-linecap='round' fill='none'/%3E%3Cline x1='50' y1='15' x2='50' y2='42' stroke='%23FFF8F4' stroke-width='4' stroke-linecap='round'/%3E%3Cellipse cx='50' cy='42' rx='9' ry='11' fill='%23FFF8F4'/%3E%3C/g%3E%3C/svg%3E", "sizes": "192x192", "type": "image/svg+xml" }]
+    }
+  ]
+}

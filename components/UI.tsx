@@ -14,7 +14,7 @@ const getContrastYIQ = (hexcolor: string) => {
 
 // Card
 export const Card: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
-  <div className={`bg-white rounded-xl shadow-md p-4 mb-4 border border-surface-variant ${className}`}>
+  <div className={`bg-white dark:bg-card-dark dark:border-white/10 rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300 ease-standard p-4 mb-4 border border-surface-variant ${className}`}>
     {children}
   </div>
 );
@@ -33,21 +33,26 @@ interface SliderProps {
 export const Slider: React.FC<SliderProps> = ({ label, value, onChange, min = 6, max = 10, step = 0.25, disabled }) => {
   return (
     <div className="mb-4">
-      <div className="flex justify-between items-center mb-1">
-        <span className="text-sm font-medium text-gray-700">{label}</span>
-        <span className="text-lg font-bold text-primary">{value.toFixed(2)}</span>
+      <div className="flex justify-between items-center mb-2">
+        <span className="text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors duration-200">{label}</span>
+        <span className={`text-lg font-bold text-primary tabular-nums transition-all duration-200 ${disabled ? 'opacity-50' : ''}`}>
+          {value.toFixed(2)}
+        </span>
       </div>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        onChange={(e) => onChange(parseFloat(e.target.value))}
-        disabled={disabled}
-        className="w-full h-2 bg-primary-container rounded-lg appearance-none cursor-pointer accent-primary"
-      />
-      <div className="flex justify-between text-xs text-gray-400 px-1 mt-1">
+      <div className="relative h-6 flex items-center">
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          onChange={(e) => onChange(parseFloat(e.target.value))}
+          disabled={disabled}
+          className="w-full h-2 bg-transparent appearance-none cursor-pointer focus:outline-none z-10"
+        />
+        {/* Custom Track Background for better dark mode support if needed, currently handled in global CSS */}
+      </div>
+      <div className="flex justify-between text-xs text-gray-400 px-1 mt-1 font-medium">
         <span>{min}</span>
         <span>{max}</span>
       </div>
@@ -57,8 +62,10 @@ export const Slider: React.FC<SliderProps> = ({ label, value, onChange, min = 6,
 
 // Section Header
 export const SectionTitle: React.FC<{ children: React.ReactNode; icon?: React.ReactNode }> = ({ children, icon }) => (
-  <h3 className="text-lg font-semibold text-primary mb-3 flex items-center gap-2">
-    {icon}
+  <h3 className="text-lg font-semibold text-primary mb-4 flex items-center gap-3">
+    <span className="transition-transform duration-300 hover:scale-110 hover:rotate-6">
+      {icon}
+    </span>
     {children}
   </h3>
 );
@@ -72,19 +79,28 @@ export const Chip: React.FC<{
   color?: string;
   disabled?: boolean;
 }> = ({ label, selected, onClick, onDelete, color, disabled }) => {
-  const bg = selected ? (color || '#8D6E4D') : '#E5E7EB';
-  const textColor = selected ? getContrastYIQ(bg) : '#374151';
-  const borderStyle = (selected && textColor === '#1f2937') ? '1px solid rgba(0,0,0,0.1)' : 'none';
+  const bg = selected ? (color || '#8D6E4D') : 'transparent';
+  const textColor = selected ? getContrastYIQ(bg) : 'inherit';
+  
+  // Dynamic styles for smooth color transition
+  const style = selected ? { backgroundColor: bg, color: textColor, borderColor: bg } : { borderColor: 'transparent' };
   
   return (
     <div 
-      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium m-1 transition-colors border border-transparent ${!disabled && onClick ? 'cursor-pointer hover:opacity-90' : ''}`}
-      style={{ backgroundColor: bg, color: textColor, border: borderStyle }}
+      className={`
+        inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium m-1 
+        border transition-all duration-300 ease-emphasized select-none
+        ${selected ? 'shadow-sm transform scale-100' : 'bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/10'}
+        ${!disabled && onClick ? 'cursor-pointer active:scale-95' : 'opacity-80 cursor-default'}
+      `}
+      style={style}
       onClick={!disabled ? onClick : undefined}
     >
       {label}
       {onDelete && !disabled && (
-        <span className="ml-2 cursor-pointer opacity-70 hover:opacity-100 font-bold">×</span>
+        <span className="ml-2 w-4 h-4 flex items-center justify-center rounded-full bg-black/10 hover:bg-black/20 transition-colors">
+          ×
+        </span>
       )}
     </div>
   );
@@ -97,11 +113,11 @@ export const Button: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement> & { 
   className = '', 
   ...props 
 }) => {
-  const baseStyle = "px-4 py-2 rounded-lg font-medium transition-all shadow-sm active:shadow-inner disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2";
+  const baseStyle = "px-5 py-2.5 rounded-xl font-medium transition-all duration-200 ease-standard shadow-sm active:shadow-inner disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-[0.98]";
   const variants = {
-    primary: "bg-primary text-on-primary hover:bg-[#755839]",
-    secondary: "bg-secondary text-white hover:bg-[#5E462E]",
-    outline: "border border-primary text-primary hover:bg-surface-variant bg-transparent"
+    primary: "bg-primary text-on-primary hover:bg-[#755839] hover:shadow-md",
+    secondary: "bg-secondary text-white hover:bg-[#5E462E] hover:shadow-md",
+    outline: "border border-primary text-primary hover:bg-surface-variant dark:hover:bg-white/5 bg-transparent"
   };
 
   return (
@@ -116,10 +132,10 @@ export const GoogleSignInButton: React.FC<{ onClick: () => void; isLoading?: boo
   <button 
     onClick={onClick}
     disabled={isLoading}
-    className="bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 px-4 py-2 rounded-lg shadow-sm font-medium text-sm flex items-center gap-2 transition-all active:scale-95"
+    className="bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 px-4 py-2 rounded-lg shadow-sm font-medium text-sm flex items-center gap-2 transition-all duration-200 ease-standard active:scale-95 hover:shadow-md"
   >
     {isLoading ? (
-      <span className="animate-spin h-4 w-4 border-2 border-gray-500 rounded-full border-t-transparent"></span>
+      <span className="animate-spin h-5 w-5 border-2 border-gray-500 rounded-full border-t-transparent"></span>
     ) : (
       <svg className="w-5 h-5" viewBox="0 0 24 24">
         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>

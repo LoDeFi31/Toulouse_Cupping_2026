@@ -13,8 +13,7 @@ export interface CoffeeEntry {
   isLocked: boolean;
   timestamp: number;
   
-  // A. Roast
-  roastLevel: RoastLevelType;
+  // A. Roast - REMOVED
   
   // B. Fragrance / Aroma
   fragranceScore: number;
@@ -29,7 +28,7 @@ export interface CoffeeEntry {
   
   // E. Acidity
   acidityScore: number;
-  acidityType: 'Citrique' | 'Malique' | 'Tartrique' | 'Phosphorique' | 'Acétique' | '';
+  acidityType: 'Citrique' | 'Malique' | 'Tartrique' | 'Acétique' | '';
   acidityIntensity: 'Faible' | 'Moyenne' | 'Forte' | '';
   
   // F. Body
