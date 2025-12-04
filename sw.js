@@ -1,8 +1,13 @@
-const CACHE_NAME = 'toulouse-cupping-v4';
+const CACHE_NAME = 'toulouse-cupping-v7';
+const FLAVOR_WHEEL_URL = "https://dailycoffeenews.com/wp-content/uploads/2016/01/SCA_Flavor_Wheel.jpg";
+
 const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/manifest.json'
+  '.',
+  'index.html',
+  'manifest.json',
+  'icon.svg',
+  'icon-192.png',
+  'icon-512.png'
 ];
 
 // Install Event: Cache critical assets
@@ -31,26 +36,20 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch Event: Stratégie hybride pour SPA
+// Fetch Event
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
-  const url = new URL(event.request.url);
-
-  // 1. Navigation (HTML) -> Network First, puis Cache
-  // Gérer spécifiquement le cas du start_url avec query params (/?source=pwa)
+  // 1. Navigation (HTML)
   if (event.request.mode === 'navigate') {
     event.respondWith(
       (async () => {
         try {
-          // Essayer le réseau d'abord
           const networkResponse = await fetch(event.request);
           return networkResponse;
         } catch (error) {
-          // Fallback sur le cache
           const cache = await caches.open(CACHE_NAME);
-          // Essayer de trouver l'URL exacte, sinon retourner index.html (SPA routing)
-          const cachedResponse = await cache.match(event.request) || await cache.match('/index.html');
+          const cachedResponse = await cache.match(event.request) || await cache.match('index.html');
           return cachedResponse;
         }
       })()
@@ -58,16 +57,24 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 2. Assets Statiques -> Cache First
+  // 2. Assets (Statiques & Roue des Saveurs)
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
         return cachedResponse;
       }
+
       return fetch(event.request).then((networkResponse) => {
-        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic' && networkResponse.type !== 'cors') {
+        // Vérification standard : on ne cache que les succès (200) et les types basic/cors
+        const isValidResponse = networkResponse && networkResponse.status === 200 && (networkResponse.type === 'basic' || networkResponse.type === 'cors');
+        
+        // EXCEPTION : On autorise la mise en cache de la roue des saveurs même si la réponse est 'opaque'
+        const isFlavorWheel = event.request.url === FLAVOR_WHEEL_URL;
+
+        if (!isValidResponse && !isFlavorWheel) {
           return networkResponse;
         }
+
         const responseToCache = networkResponse.clone();
         caches.open(CACHE_NAME).then((cache) => {
           cache.put(event.request, responseToCache);

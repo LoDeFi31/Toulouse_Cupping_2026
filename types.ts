@@ -1,3 +1,4 @@
+
 export interface AromaCategory {
   id: string;
   name: string;
@@ -7,14 +8,17 @@ export interface AromaCategory {
 
 export type RoastLevelType = 'light' | 'medium-light' | 'medium' | 'medium-dark' | 'dark';
 
+export type Language = 'fr' | 'en' | 'es';
+
 export interface CoffeeEntry {
   id: string;
   name: string;
   isLocked: boolean;
-  isFavorite: boolean; // New: Mark as favorite
+  isFavorite: boolean;
   timestamp: number;
   
-  // A. Roast - REMOVED
+  // Process
+  process: string;
   
   // B. Fragrance / Aroma
   fragranceScore: number;
@@ -26,19 +30,19 @@ export interface CoffeeEntry {
   
   // D. Aftertaste
   aftertasteScore: number;
-  
+
   // E. Acidity
   acidityScore: number;
-  acidityType: 'Citrique' | 'Malique' | 'Tartrique' | 'Acétique' | '';
-  acidityIntensity: 'Faible' | 'Moyenne' | 'Forte' | '';
-  
+  acidityType: string;
+  acidityIntensity: string;
+
   // F. Body
   bodyScore: number;
-  bodyType: 'Aqueux' | 'Léger' | 'Moyen' | 'Rond' | 'Crémeux' | 'Sirupeux' | 'Velouté' | 'Charnu' | '';
-  
+  bodyType: string;
+
   // G. Balance
   balanceScore: number;
-  
+
   // I. Comments
   comments: string;
 }
@@ -47,5 +51,31 @@ export interface Session {
   id: string;
   createdAt: number;
   name: string;
+  location: string;
+  dateString: string;
+  
+  // Session Notes
+  originNotes?: string;
+  roasterNotes?: string;
+  importerNotes?: string;
+
   coffees: CoffeeEntry[];
+}
+
+// --- BREWING TYPES ---
+
+export type BrewMethodType = 'v60' | 'chemex' | 'aeropress' | 'french_press' | 'moka' | 'origami' | 'kalita';
+
+export interface BrewRecipe {
+  id: string;
+  timestamp: number;
+  method: BrewMethodType;
+  coffeeWeight: number; // grams
+  ratio: number; // 1:x
+  waterWeight: number; // calculated
+  grindSize?: string; // e.g. "Moyen-Fin"
+  totalTime: number; // seconds
+  waterTemp?: number; // celsius
+  notes: string;
+  rating?: number; // 1-5 stars maybe? kept simple for now
 }
