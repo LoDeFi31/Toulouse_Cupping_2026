@@ -185,7 +185,16 @@ export const BoxIcon: React.FC<IconProps> = ({ className = "w-6 h-6" }) => (
   </svg>
 );
 
-// --- NEW MENU ICONS ---
+export const TranslateIcon: React.FC<IconProps> = ({ className = "w-6 h-6" }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="m5 8 6 6" />
+    <path d="m4 14 6-1 2-1" />
+    <path d="M2 5h12" />
+    <path d="M7 2h1" />
+    <path d="m22 22-5-13-5 13" />
+    <path d="M14.2 16h5.6" />
+  </svg>
+);
 
 export const InfoSessionIcon: React.FC<IconProps> = ({ className = "w-6 h-6" }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -236,9 +245,6 @@ export const DeleteSessionIcon: React.FC<IconProps> = ({ className = "w-6 h-6" }
     <line x1="14" y1="11" x2="14" y2="17"></line>
   </svg>
 );
-
-
-// --- BREWING ICONS ---
 
 export const BrewIcon: React.FC<IconProps> = ({ className = "w-6 h-6" }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { CoffeeEntry, Session, Language } from './types';
 import { DEFAULT_COFFEE, GOOGLE_CLIENT_ID, TRANSLATIONS } from './constants';
@@ -8,13 +9,13 @@ import BrewingInterface from './components/BrewingInterface';
 import { Button, GoogleSignInButton } from './components/UI';
 import { 
   AppLogo, QrCodeIcon, SunIcon, MoonIcon, LocationIcon, CalendarIcon, 
-  WheelIcon, GlobeIcon, FlameIcon, BoxIcon, BrewIcon,
+  WheelIcon, GlobeIcon, FlameIcon, BoxIcon, BrewIcon, TranslateIcon,
   InfoSessionIcon, SummaryTableIcon, UpdateAppIcon, CloudUploadIcon, LogoutIcon, DeleteSessionIcon
 } from './components/Icons';
 import { IOSInstallPrompt } from './components/IOSInstallPrompt';
 import TimerModal from './components/TimerModal';
 
-const APP_VERSION = "1.6.0";
+const APP_VERSION = "1.6.2";
 
 const generateId = () => {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -228,9 +229,6 @@ const App: React.FC = () => {
     // Updated Status Bar Color
     const metaThemeColor = document.querySelector('meta[name="theme-color"]');
     if (metaThemeColor) {
-        // In dark mode, we stick to the static Espresso background #1E1B18
-        // In light mode, the background might change based on dynamic theme, 
-        // but let's default to a neutral light surface for now or attempt to read computed style
         metaThemeColor.setAttribute('content', isDarkMode ? '#1E1B18' : '#FFF8F6');
     }
   }, [isDarkMode]);
@@ -260,50 +258,6 @@ const App: React.FC = () => {
     }
   }, []);
   
-  // Pull to refresh logic... (kept same as before)
-  useEffect(() => {
-    let startY = 0;
-    let isPulling = false;
-    const threshold = 70;
-    
-    const handleTouchStart = (e: TouchEvent) => {
-        if ((e.target as Element).closest('.flavor-wheel-container')) return;
-        if (window.scrollY === 0) {
-            startY = e.touches[0].clientY;
-            isPulling = true;
-        }
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-        if (!isPulling) return;
-        const currentY = e.touches[0].clientY;
-        const diff = currentY - startY;
-        if (diff <= 0) isPulling = false;
-    };
-
-    const handleTouchEnd = (e: TouchEvent) => {
-        if (!isPulling) return;
-        const currentY = e.changedTouches[0].clientY;
-        const diff = currentY - startY;
-        if (diff > threshold && window.scrollY === 0) {
-             const spinner = document.createElement('div');
-             spinner.className = 'fixed top-4 left-1/2 -translate-x-1/2 z-[100] bg-surface-container-high p-3 rounded-full shadow-elevation-2 animate-fadeIn pt-safe mt-2';
-             spinner.innerHTML = '<div class="animate-spin h-6 w-6 border-2 border-primary rounded-full border-t-transparent"></div>';
-             document.body.appendChild(spinner);
-             setTimeout(() => window.location.reload(), 800);
-        }
-        isPulling = false;
-    };
-    document.addEventListener('touchstart', handleTouchStart, { passive: true });
-    document.addEventListener('touchmove', handleTouchMove, { passive: true });
-    document.addEventListener('touchend', handleTouchEnd, { passive: true });
-    return () => {
-        document.removeEventListener('touchstart', handleTouchStart);
-        document.removeEventListener('touchmove', handleTouchMove);
-        document.removeEventListener('touchend', handleTouchEnd);
-    };
-  }, []);
-
   useEffect(() => {
     localStorage.setItem('toulouse_cupping_session', JSON.stringify(session));
   }, [session]);
@@ -483,18 +437,19 @@ const App: React.FC = () => {
       
       {showTimer && <TimerModal onClose={() => setShowTimer(false)} dict={dict} />}
 
-      <header className="sticky top-0 z-40 bg-surface-container text-on-surface px-4 py-3 flex justify-between items-center select-none pt-safe transition-colors duration-500 no-print relative border-b border-outline/5">
-        <div className="flex items-center z-10">
+      <header className="sticky top-0 z-40 bg-surface-container text-on-surface px-4 py-3 flex justify-between items-center select-none pt-safe transition-colors duration-500 no-print relative border-b border-outline/5 h-[60px]">
+        <div className="flex items-center z-10 w-12">
           <AppLogo className="w-12 h-12 text-primary" />
         </div>
         
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pt-safe w-full text-center pointer-events-none">
-           <h1 className="text-title-large font-bold tracking-tight whitespace-nowrap overflow-hidden text-ellipsis px-16">
+        {/* Title Container - Centered and Non-Clipping */}
+        <div className="absolute left-0 top-0 w-full h-full flex items-center justify-center pt-safe pointer-events-none">
+           <h1 className="text-2xl font-bold tracking-tight text-on-surface whitespace-nowrap px-4 py-2">
              Toulouse Cupping
            </h1>
         </div>
         
-        <div className="flex items-center gap-1 z-10">
+        <div className="flex items-center gap-1 z-10 w-12 justify-end">
            <div className="hidden md:block">
              {!user ? (
                <GoogleSignInButton onClick={handleGoogleLogin} isLoading={isLoggingIn} />
@@ -551,7 +506,7 @@ const App: React.FC = () => {
                {/* Language Selector */}
                <div className="flex items-center justify-between px-3 py-2 bg-surface-variant/30 rounded-lg hover:bg-surface-variant/50 transition-colors">
                   <span className="flex items-center gap-2 text-label-large">
-                    <span className="text-lg">🌍</span> {dict.language}
+                    <TranslateIcon className="w-5 h-5 text-on-surface-variant" /> {dict.language}
                   </span>
                   <div className="flex gap-1 bg-surface-container rounded-lg p-1">
                       <button onClick={() => handleLanguageChange('fr')} className={`px-2 py-0.5 rounded text-xs font-bold transition-colors ${language === 'fr' ? 'bg-primary text-on-primary' : 'text-on-surface-variant'}`}>FR</button>

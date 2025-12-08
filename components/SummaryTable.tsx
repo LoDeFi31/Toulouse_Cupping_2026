@@ -303,7 +303,7 @@ const SummaryTable: React.FC<SummaryTableProps> = ({ session, onBack, dict, lang
       </div>
 
       <div className="mt-8 flex justify-center gap-4 no-print flex-wrap pb-safe">
-        <Button onClick={exportCSV} variant="secondary" className="w-full md:w-auto">
+        <Button onClick={exportCSV} variant="outlined" className="w-full md:w-auto">
            📥 {dict.csv}
         </Button>
         <Button onClick={handlePrint} variant="tonal" className="w-full md:w-auto">

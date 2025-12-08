@@ -13,8 +13,9 @@ const getContrastYIQ = (hexcolor: string) => {
 };
 
 // M3 Elevated Card
-export const Card: React.FC<{ children: React.ReactNode; className?: string; style?: React.CSSProperties; onClick?: (e: React.MouseEvent) => void }> = ({ children, className = '', style, onClick }) => (
+export const Card: React.FC<{ children: React.ReactNode; className?: string; style?: React.CSSProperties; onClick?: (e: React.MouseEvent) => void; id?: string }> = ({ children, className = '', style, onClick, id }) => (
   <div 
+    id={id}
     style={style}
     onClick={onClick}
     className={`
@@ -27,7 +28,7 @@ export const Card: React.FC<{ children: React.ReactNode; className?: string; sty
   </div>
 );
 
-// M3 Discrete Slider (Material You Implementation)
+// M3 Discrete Slider (Android 16 QPR2 Style - Tall Track)
 interface SliderProps {
   label: string;
   value: number;
@@ -42,12 +43,10 @@ interface SliderProps {
 export const Slider: React.FC<SliderProps> = ({ label, value, onChange, min = 6, max = 10, step = 0.25, disabled, variant = 'standard' }) => {
   const [isDragging, setIsDragging] = useState(false);
   
-  const midpoint = variant === 'centered' ? (max + min) / 2 : min;
-  
-  // Calculate Percentages
-  const percentage = ((value - min) / (max - min)) * 100;
-  const startPct = ((Math.min(value, midpoint) - min) / (max - min)) * 100;
-  const endPct = ((Math.max(value, midpoint) - min) / (max - min)) * 100;
+  // Calculate Percentage based on value relative to range
+  // Always fill from left (min) to current value
+  const rawPct = ((value - min) / (max - min)) * 100;
+  const fillPct = Math.max(0, Math.min(100, rawPct));
 
   // Generate Ticks
   const ticks = useMemo(() => {
@@ -59,60 +58,65 @@ export const Slider: React.FC<SliderProps> = ({ label, value, onChange, min = 6,
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVal = parseFloat(e.target.value);
     onChange(newVal);
-    // Haptic feedback on step change
+    // Haptic feedback
     if (typeof navigator !== 'undefined' && navigator.vibrate) {
        try { navigator.vibrate(5); } catch(e){}
     }
   };
 
   return (
-    <div className="mb-6 select-none group relative pt-6">
-      {/* Header Label (Top Left) */}
-      <div className="flex justify-between items-end mb-4 px-1">
+    <div className="mb-6 select-none group relative pt-2">
+      {/* Header Label Row */}
+      <div className="flex justify-between items-end mb-2 px-1">
         <label className={`text-label-large transition-colors duration-300 ${isDragging ? 'text-primary' : 'text-on-surface'}`}>
           {label}
         </label>
-        {/* We hide the static value when dragging because the balloon shows it */}
-        <span className={`text-title-medium text-primary tabular-nums transition-opacity duration-200 ${isDragging ? 'opacity-0' : 'opacity-100'}`}>
+        <span className={`text-title-medium font-bold tabular-nums transition-colors duration-200 ${isDragging ? 'text-primary scale-110' : 'text-on-surface-variant'}`}>
           {value.toFixed(2)}
         </span>
       </div>
       
-      {/* Slider Container */}
-      <div className="relative h-12 w-full flex items-center touch-none">
+      {/* Slider Container (The Thick Pill) */}
+      <div 
+        className={`
+            relative w-full h-[44px] rounded-full overflow-hidden 
+            transition-all duration-300 ease-emphasized
+            ${isDragging ? 'scale-[1.02] shadow-elevation-1' : 'scale-100'}
+            bg-surface-container-highest
+        `}
+      >
         
-        {/* 1. Track Background (Inactive) */}
-        <div className="absolute top-1/2 -translate-y-1/2 left-0 w-full h-[16px] md:h-[4px] rounded-full bg-surface-variant/30 pointer-events-none z-0"></div>
+        {/* 1. Track Background (Inactive) is the container bg itself */}
 
-        {/* 2. Active Track (Primary Color) */}
+        {/* 2. Active Track (Fill) - Always from left to cursor */}
         <div 
-          className="absolute top-1/2 -translate-y-1/2 h-[16px] md:h-[4px] bg-primary rounded-full pointer-events-none z-0 transition-[left,width] duration-100 ease-linear"
+          className="absolute top-0 h-full bg-primary transition-[width] duration-75 ease-linear pointer-events-none z-0 opacity-90"
           style={{ 
-              left: `${startPct}%`, 
-              width: `${endPct - startPct}%`
+              left: 0, 
+              width: `${fillPct}%`
           }}
         />
 
-        {/* 3. Ticks (Dots) */}
-        <div className="absolute w-full h-[4px] rounded-full pointer-events-none z-0">
+        {/* 3. Ticks (Dots) - Subtle overlay */}
+        <div className="absolute inset-0 w-full h-full pointer-events-none z-0">
            {ticks.map((tickPct, idx) => {
-             // Don't show ticks at start/end to keep it clean
+             // Skip first/last to avoid edge artifacts
              if (idx === 0 || idx === ticks.length - 1) return null;
              
-             // Check if tick is inside the active range
-             const isActive = tickPct >= startPct && tickPct <= endPct;
+             // Active if covered by the fill
+             const isActive = tickPct <= fillPct;
              
              return (
                <div 
                   key={idx}
-                  className={`absolute top-1/2 -translate-y-1/2 w-[4px] h-[4px] rounded-full transition-colors duration-200 ${isActive ? 'bg-on-primary/40' : 'bg-on-surface-variant/30'}`}
-                  style={{ left: `calc(${tickPct}% - 2px)` }}
+                  className={`absolute top-1/2 -translate-y-1/2 w-[2px] h-[2px] rounded-full transition-colors duration-200 ${isActive ? 'bg-on-primary/30' : 'bg-on-surface-variant/20'}`}
+                  style={{ left: `${tickPct}%` }}
                />
              );
            })}
         </div>
 
-        {/* 4. Native Input (Invisible Hitbox) */}
+        {/* 4. Native Input (Invisible Hitbox - Full Size) */}
         <input
           type="range"
           min={min}
@@ -124,45 +128,19 @@ export const Slider: React.FC<SliderProps> = ({ label, value, onChange, min = 6,
           onPointerDown={() => setIsDragging(true)}
           onPointerUp={() => setIsDragging(false)}
           onBlur={() => setIsDragging(false)}
-          className="m3-slider z-20 opacity-0 absolute w-full h-full cursor-pointer" 
+          className="m3-slider z-20 opacity-0 absolute inset-0 w-full h-full cursor-pointer touch-none" 
+          style={{ touchAction: 'pan-y' }}
+          inputMode="none"
         />
-        
-        {/* 5. Visual Thumb (Handle) */}
-        <div 
-            className={`
-              absolute top-1/2 -translate-y-1/2 w-5 h-5 md:w-6 md:h-6 
-              bg-primary rounded-full shadow-elevation-1 pointer-events-none z-30 
-              transition-transform duration-200 ease-emphasized
-              border-[3px] border-surface
-            `}
-            style={{ 
-              left: `calc(${percentage}% - 10px)`, // Adjust for half width (mobile 20px -> 10px)
-              transform: isDragging ? 'translateY(-50%) scale(1.2)' : 'translateY(-50%) scale(1)' 
-            }}
-        >
-          {/* Ripple effect on active */}
-          <div className={`absolute inset-0 rounded-full bg-primary -z-10 transition-transform duration-200 ${isDragging ? 'scale-[2.5] opacity-20' : 'scale-0 opacity-0'}`} />
-        </div>
 
-        {/* 6. Value Indicator (Balloon) - Material You Style */}
-        <div 
-          className={`
-            absolute -top-10 z-40 flex flex-col items-center pointer-events-none
-            transition-all duration-300 ease-emphasized origin-bottom
-            ${isDragging ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-50 translate-y-4'}
-          `}
-          style={{ 
-             left: `calc(${percentage}% - 1.25rem)`, // Center the 2.5rem wide balloon
-          }}
-        >
-           <div className="relative bg-inverse-surface text-inverse-on-surface w-10 h-10 rounded-full flex items-center justify-center shadow-elevation-2 rotate-45 rounded-bl-none">
-              <span className="text-label-large font-bold -rotate-45">{value.toFixed(2)}</span>
-           </div>
-        </div>
+        {/* 5. Separator Line for "Centered" variant (The Zero point visual marker only) */}
+        {variant === 'centered' && (
+             <div className="absolute left-1/2 top-0 bottom-0 w-[2px] bg-surface/30 mix-blend-overlay pointer-events-none z-10"></div>
+        )}
       </div>
       
       {/* Range Labels */}
-      <div className="flex justify-between text-label-small text-on-surface-variant opacity-60 mt-1 px-1">
+      <div className="flex justify-between text-label-small text-on-surface-variant/50 mt-1 px-2">
         <span>{min}</span>
         <span>{max}</span>
       </div>

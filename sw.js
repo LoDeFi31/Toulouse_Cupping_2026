@@ -1,13 +1,15 @@
-const CACHE_NAME = 'toulouse-cupping-v7';
+
+const CACHE_NAME = 'toulouse-cupping-v21';
 const FLAVOR_WHEEL_URL = "https://dailycoffeenews.com/wp-content/uploads/2016/01/SCA_Flavor_Wheel.jpg";
 
 const ASSETS_TO_CACHE = [
-  '.',
+  './',
   'index.html',
   'manifest.json',
-  'icon.svg',
-  'icon-192.png',
-  'icon-512.png'
+  'icons/android/android-launchericon-192-192.png',
+  'icons/android/android-launchericon-512-512.png',
+  'icons/ios/180.png',
+  'icons/windows11/Square44x44Logo.scale-100.png'
 ];
 
 // Install Event: Cache critical assets
