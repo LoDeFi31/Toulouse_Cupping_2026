@@ -1,106 +1,31 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Button } from './UI';
 
 interface TimerModalProps {
   onClose: () => void;
   dict: any;
+  // State received from parent
+  timeLeft: number;
+  isRunning: boolean;
+  initialTime: number;
+  // Actions
+  onStart: (minutes: number) => void;
+  onPause: () => void;
+  onResume: () => void;
+  onReset: () => void;
 }
 
-const TimerModal: React.FC<TimerModalProps> = ({ onClose, dict }) => {
-  const [timeLeft, setTimeLeft] = useState(0);
-  const [isRunning, setIsRunning] = useState(false);
-  const [initialTime, setInitialTime] = useState(0);
-
-  // Sound generation helper using Web Audio API
-  const playNotificationSound = (type: 'simple' | 'double' = 'simple') => {
-    try {
-      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioContext) return;
-
-      const ctx = new AudioContext();
-      const now = ctx.currentTime;
-      
-      const playBeep = (startTime: number, freq: number, duration: number) => {
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(freq, startTime);
-          gain.gain.setValueAtTime(0.5, startTime);
-          gain.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
-          
-          osc.start(startTime);
-          osc.stop(startTime + duration);
-      };
-
-      // First beep
-      playBeep(now, 880, 1);
-
-      // Second beep if double (for finish)
-      if (type === 'double') {
-          playBeep(now + 0.2, 880, 1);
-          playBeep(now + 0.4, 1100, 1.5);
-      }
-
-    } catch (e) {
-      console.error("Audio playback failed", e);
-    }
-  };
-
-  useEffect(() => {
-    let interval: number;
-    if (isRunning && timeLeft > 0) {
-      interval = window.setInterval(() => {
-        setTimeLeft((prev) => {
-            const newVal = prev - 1;
-            
-            // LOGIQUE D'ALERTE INTERMÉDIAIRE (Casse de la croûte)
-            // Si on est sur le mode 6 minutes (360s), on veut sonner quand il reste 2 minutes (120s)
-            // Ce qui correspond à 4 minutes écoulées.
-            if (initialTime === 360 && newVal === 120) {
-                 playNotificationSound('simple');
-                 if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate([200, 100, 200]);
-            }
-            return newVal;
-        });
-      }, 1000);
-    } else if (timeLeft === 0 && isRunning) {
-      setIsRunning(false);
-      
-      // Fin du timer
-      playNotificationSound('double');
-
-      // Vibration longue
-      if (typeof navigator !== 'undefined' && navigator.vibrate) {
-        navigator.vibrate([200, 100, 200, 100, 500]);
-      }
-    }
-    return () => clearInterval(interval);
-  }, [isRunning, timeLeft, initialTime]);
+const TimerModal: React.FC<TimerModalProps> = ({ 
+    onClose, dict, 
+    timeLeft, isRunning, initialTime,
+    onStart, onPause, onResume, onReset 
+}) => {
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-  };
-
-  const startTimer = (minutes: number) => {
-    const seconds = minutes * 60;
-    setInitialTime(seconds);
-    setTimeLeft(seconds);
-    setIsRunning(true);
-  };
-
-  const togglePause = () => {
-    setIsRunning(!isRunning);
-  };
-
-  const reset = () => {
-    setIsRunning(false);
-    setTimeLeft(initialTime);
   };
 
   const progress = initialTime > 0 ? ((initialTime - timeLeft) / initialTime) * 100 : 0;
@@ -167,7 +92,7 @@ const TimerModal: React.FC<TimerModalProps> = ({ onClose, dict }) => {
 
          <div className="flex gap-3 w-full">
             <button 
-                onClick={() => startTimer(4)} 
+                onClick={() => onStart(4)} 
                 className={`flex-1 py-3 px-4 rounded-xl font-bold text-label-large hover:brightness-95 active:scale-95 transition-all
                     ${initialTime === 240 ? 'bg-primary text-on-primary ring-2 ring-offset-2 ring-primary' : 'bg-secondary-container text-on-secondary-container animate-pulse-gentle'}
                 `}
@@ -176,7 +101,7 @@ const TimerModal: React.FC<TimerModalProps> = ({ onClose, dict }) => {
                 <span className="block text-[10px] font-normal opacity-70">{dict.crust}</span>
             </button>
             <button 
-                onClick={() => startTimer(6)} 
+                onClick={() => onStart(6)} 
                 className={`flex-1 py-3 px-4 rounded-xl font-bold text-label-large hover:brightness-95 active:scale-95 transition-all
                     ${initialTime === 360 ? 'bg-primary text-on-primary ring-2 ring-offset-2 ring-primary' : 'bg-secondary-container text-on-secondary-container animate-pulse-gentle'}
                 `}
@@ -189,10 +114,10 @@ const TimerModal: React.FC<TimerModalProps> = ({ onClose, dict }) => {
          <div className="flex gap-4 w-full">
             {initialTime > 0 && (
                 <>
-                    <Button variant="tonal" onClick={reset} className="flex-1">
+                    <Button variant="tonal" onClick={onReset} className="flex-1">
                         {dict.reset}
                     </Button>
-                    <Button variant="filled" onClick={togglePause} className="flex-[2]">
+                    <Button variant="filled" onClick={isRunning ? onPause : onResume} className="flex-[2]">
                         {isRunning ? dict.pause : dict.resume}
                     </Button>
                 </>

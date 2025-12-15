@@ -15,7 +15,7 @@ import {
 import { IOSInstallPrompt } from './components/IOSInstallPrompt';
 import TimerModal from './components/TimerModal';
 
-const APP_VERSION = "1.6.2";
+const APP_VERSION = "1.6.3";
 
 const generateId = () => {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -188,8 +188,21 @@ const App: React.FC = () => {
   const [showMenu, setShowMenu] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showSessionInfo, setShowSessionInfo] = useState(false);
-  const [showTimer, setShowTimer] = useState(false);
   
+  // --- TIMER STATE LIFTED UP ---
+  const [showTimerModal, setShowTimerModal] = useState(false);
+  const [timerState, setTimerState] = useState<{
+    isRunning: boolean;
+    timeLeft: number;
+    initialTime: number;
+    endTime: number | null; // Timestamp when timer will end
+  }>({
+    isRunning: false,
+    timeLeft: 0,
+    initialTime: 0,
+    endTime: null
+  });
+
   const [user, setUser] = useState<User | null>(() => {
     const savedUser = localStorage.getItem('toulouse_cupping_user');
     return savedUser ? JSON.parse(savedUser) : null;
@@ -215,6 +228,107 @@ const App: React.FC = () => {
   };
 
   const tabsRef = useRef<HTMLDivElement>(null);
+
+  // --- TIMER LOGIC ---
+  const playNotificationSound = (type: 'simple' | 'double' = 'simple') => {
+    try {
+      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContext) return;
+      const ctx = new AudioContext();
+      const now = ctx.currentTime;
+      
+      const playBeep = (startTime: number, freq: number, duration: number) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, startTime);
+          gain.gain.setValueAtTime(0.5, startTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+          osc.start(startTime);
+          osc.stop(startTime + duration);
+      };
+      playBeep(now, 880, 1);
+      if (type === 'double') {
+          playBeep(now + 0.2, 880, 1);
+          playBeep(now + 0.4, 1100, 1.5);
+      }
+    } catch (e) {
+      console.error("Audio playback failed", e);
+    }
+  };
+
+  const startTimer = (minutes: number) => {
+    const seconds = minutes * 60;
+    const now = Date.now();
+    setTimerState({
+        isRunning: true,
+        initialTime: seconds,
+        timeLeft: seconds,
+        endTime: now + (seconds * 1000)
+    });
+  };
+
+  const pauseTimer = () => {
+      setTimerState(prev => ({
+          ...prev,
+          isRunning: false,
+          endTime: null // Clear end time on pause
+      }));
+  };
+
+  const resumeTimer = () => {
+      if(timerState.timeLeft <= 0) return;
+      const now = Date.now();
+      setTimerState(prev => ({
+          ...prev,
+          isRunning: true,
+          endTime: now + (prev.timeLeft * 1000)
+      }));
+  };
+
+  const resetTimer = () => {
+      setTimerState({
+          isRunning: false,
+          timeLeft: timerState.initialTime, // Reset to last selected time
+          initialTime: timerState.initialTime,
+          endTime: null
+      });
+  };
+
+  // Timer Tick Effect
+  useEffect(() => {
+    let interval: number;
+    if (timerState.isRunning && timerState.endTime) {
+        interval = window.setInterval(() => {
+            const now = Date.now();
+            const diff = timerState.endTime! - now;
+            const newTimeLeft = Math.max(0, Math.ceil(diff / 1000));
+            
+            setTimerState(prev => {
+                // Check for specific alerts
+                // Crust Break alert (at 4 mins elapsed of a 6 min timer -> 2 mins left)
+                if (prev.initialTime === 360 && prev.timeLeft > 120 && newTimeLeft <= 120) {
+                     playNotificationSound('simple');
+                     if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate([200, 100, 200]);
+                }
+                
+                // Finish alert
+                if (prev.timeLeft > 0 && newTimeLeft === 0) {
+                    playNotificationSound('double');
+                    if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 500]);
+                    return { ...prev, isRunning: false, timeLeft: 0, endTime: null };
+                }
+
+                return { ...prev, timeLeft: newTimeLeft };
+            });
+
+        }, 200); // Check more frequently than 1s for smoother UI updates, though timeLeft is integer
+    }
+    return () => clearInterval(interval);
+  }, [timerState.isRunning, timerState.endTime]);
+
 
   useEffect(() => {
     // Apply Dark Mode Class
@@ -435,7 +549,20 @@ const App: React.FC = () => {
           />
       )}
       
-      {showTimer && <TimerModal onClose={() => setShowTimer(false)} dict={dict} />}
+      {/* TIMER MODAL */}
+      {showTimerModal && (
+        <TimerModal 
+            onClose={() => setShowTimerModal(false)} 
+            dict={dict} 
+            timeLeft={timerState.timeLeft}
+            isRunning={timerState.isRunning}
+            initialTime={timerState.initialTime}
+            onStart={startTimer}
+            onPause={pauseTimer}
+            onResume={resumeTimer}
+            onReset={resetTimer}
+        />
+      )}
 
       <header className="sticky top-0 z-40 bg-surface-container text-on-surface px-4 py-3 flex justify-between items-center select-none pt-safe transition-colors duration-500 no-print relative border-b border-outline/5 h-[60px]">
         <div className="flex items-center z-10 w-12">
@@ -602,7 +729,8 @@ const App: React.FC = () => {
                 coffee={session.coffees[activeCoffeeIndex]}
                 onUpdate={updateCoffee}
                 onDelete={session.coffees.length > 1 ? () => deleteCoffee(session.coffees[activeCoffeeIndex].id) : undefined}
-                onOpenTimer={() => setShowTimer(true)}
+                onOpenTimer={() => setShowTimerModal(true)}
+                timerState={timerState}
                 dict={dict}
                 language={language}
                 />

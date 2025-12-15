@@ -15,6 +15,7 @@ interface CoffeeFormProps {
   onUpdate: (coffee: CoffeeEntry) => void;
   onDelete?: () => void;
   onOpenTimer?: () => void;
+  timerState?: { isRunning: boolean; timeLeft: number }; // Optional prop for timer display
   dict: any;
   language?: Language;
 }
@@ -65,7 +66,7 @@ const CollapsibleSection: React.FC<{
   );
 };
 
-const CoffeeForm: React.FC<CoffeeFormProps> = ({ coffee, onUpdate, onDelete, onOpenTimer, dict, language = 'fr' }) => {
+const CoffeeForm: React.FC<CoffeeFormProps> = ({ coffee, onUpdate, onDelete, onOpenTimer, timerState, dict, language = 'fr' }) => {
   const isDisabled = coffee.isLocked;
 
   const handleUpdate = (updates: Partial<CoffeeEntry>) => {
@@ -77,6 +78,12 @@ const CoffeeForm: React.FC<CoffeeFormProps> = ({ coffee, onUpdate, onDelete, onO
     const sum = coffee.fragranceScore + coffee.flavorScore + coffee.aftertasteScore + coffee.acidityScore + coffee.bodyScore + coffee.balanceScore;
     return sum / 6;
   }, [coffee]);
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
 
   return (
     <div className="pb-32">
@@ -321,10 +328,21 @@ const CoffeeForm: React.FC<CoffeeFormProps> = ({ coffee, onUpdate, onDelete, onO
             {onOpenTimer && (
               <button 
                   onClick={onOpenTimer}
-                  className="flex items-center justify-center p-2 ml-1 rounded-full text-on-surface-variant dark:text-on-surface-variant-dark hover:bg-surface-variant/50 dark:hover:bg-white/5 active:scale-90 transition-all duration-300 ease-emphasized"
+                  className={`
+                    flex items-center justify-center p-2 ml-1 rounded-full text-on-surface-variant dark:text-on-surface-variant-dark 
+                    hover:bg-surface-variant/50 dark:hover:bg-white/5 active:scale-90 transition-all duration-300 ease-emphasized relative
+                    ${timerState?.isRunning ? 'bg-primary/10 text-primary dark:text-primary-dark' : ''}
+                  `}
                   title={dict.timer}
               >
-                  <TimerIcon className="w-6 h-6" />
+                  {timerState?.isRunning ? (
+                      <span className="text-xs font-bold tabular-nums min-w-[32px]">{formatTime(timerState.timeLeft)}</span>
+                  ) : (
+                      <TimerIcon className="w-6 h-6" />
+                  )}
+                  {timerState?.isRunning && (
+                      <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full animate-ping"></span>
+                  )}
               </button>
             )}
 
